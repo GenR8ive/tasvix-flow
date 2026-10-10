@@ -1,6 +1,6 @@
 {
   "name": "tasvix-flow",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Executable flow diagrams for React: DSL parser, simulation runtime, and React Flow renderer.",
   "type": "module",
   "main": "./dist/index.js",
