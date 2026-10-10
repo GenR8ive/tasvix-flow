@@ -28,14 +28,14 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: "24"
           registry-url: "https://registry.npmjs.org"
           cache: npm
 
-      # Trusted Publishing requires npm >= 11.5.1.
+      # Trusted Publishing requires npm >= 11.5.1; use latest for reliable OIDC matching.
       - name: Upgrade npm
         run: |
-          npm install --global npm@11.6.2
+          npm install --global npm@latest
           node --version
           npm --version
 
