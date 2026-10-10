@@ -39,6 +39,14 @@ jobs:
           node --version
           npm --version
 
+      # setup-node (or a repo secret) exports NODE_AUTH_TOKEN; any value here
+      # makes npm use token auth and skip OIDC trusted publishing entirely.
+      # Clear it so npm falls back to OIDC.
+      - name: Clear NODE_AUTH_TOKEN for OIDC
+        run: |
+          echo "token length before clear: ${#NODE_AUTH_TOKEN}"
+          echo "NODE_AUTH_TOKEN=" >> "$GITHUB_ENV"
+
       - name: Debug OIDC environment
         run: |
           node --version
