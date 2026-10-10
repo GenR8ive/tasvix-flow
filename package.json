@@ -2,6 +2,10 @@
   "name": "tasvix-flow",
   "version": "0.1.4",
   "description": "Executable flow diagrams for React: DSL parser, simulation runtime, and React Flow renderer.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GenR8ive/tasvix-flow.git"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
