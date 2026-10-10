@@ -52,6 +52,7 @@ jobs:
           node --version
           npm --version
           if [ -z "$ACTIONS_ID_TOKEN_REQUEST_URL" ]; then echo "OIDC ENV MISSING"; else echo "OIDC ENV present"; fi
+          if [ -z "$ACTIONS_ID_TOKEN_REQUEST_TOKEN" ]; then echo "OIDC REQUEST TOKEN MISSING"; else echo "OIDC REQUEST TOKEN present"; fi
           if [ -z "$NODE_AUTH_TOKEN" ]; then echo "NODE_AUTH_TOKEN unset (expected for OIDC)"; else echo "NODE_AUTH_TOKEN set (unexpected)"; fi
 
       - name: Install dependencies
@@ -88,6 +89,10 @@ jobs:
       - name: Publish to npm
         if: steps.check.outputs.exists == 'false'
         run: npm stage publish
+
+      - name: Show npm debug log on failure
+        if: failure()
+        run: cat ~/.npm/_logs/*-debug-*.log 2>/dev/null | tail -n 120
 
       - name: Create Git tag
         if: steps.check.outputs.exists == 'false'
