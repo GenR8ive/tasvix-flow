@@ -39,6 +39,13 @@ jobs:
           node --version
           npm --version
 
+      - name: Debug OIDC environment
+        run: |
+          node --version
+          npm --version
+          if [ -z "$ACTIONS_ID_TOKEN_REQUEST_URL" ]; then echo "OIDC ENV MISSING"; else echo "OIDC ENV present"; fi
+          if [ -z "$NODE_AUTH_TOKEN" ]; then echo "NODE_AUTH_TOKEN unset (expected for OIDC)"; else echo "NODE_AUTH_TOKEN set (unexpected)"; fi
+
       - name: Install dependencies
         run: npm ci
 
@@ -68,9 +75,11 @@ jobs:
       - name: Build
         run: npm run build --if-present
 
+      # TEMP DIAGNOSTIC: stage instead of direct publish to isolate
+      # "allowed-actions permission" vs "config match" failure.
       - name: Publish to npm
         if: steps.check.outputs.exists == 'false'
-        run: npm publish --access public
+        run: npm stage publish
 
       - name: Create Git tag
         if: steps.check.outputs.exists == 'false'
