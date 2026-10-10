@@ -1,10 +1,13 @@
+
 name: Publish
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
     paths:
       - package.json
+  workflow_dispatch:
 
 concurrency:
   group: npm-publish
@@ -17,42 +20,64 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 22
-          registry-url: https://registry.npmjs.org
+          node-version: "22"
           cache: npm
 
-      # Trusted Publishing (OIDC) needs npm >= 11.5.1
+      # Trusted Publishing requires npm >= 11.5.1.
       - name: Upgrade npm
-        run: npm install -g npm@latest
+        run: |
+          npm install --global npm@11.6.2
+          node --version
+          npm --version
 
-      - name: Install
+      - name: Install dependencies
         run: npm ci
 
-      - name: Read version
+      - name: Read package version
         id: pkg
-        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
-
-      - name: Check if version exists on npm
-        id: check
         run: |
-          if npm view "tasvix-flow@${{ steps.pkg.outputs.version }}" version >/dev/null 2>&1; then
+          echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Check published version
+        id: check
+        env:
+          VERSION: ${{ steps.pkg.outputs.version }}
+        run: |
+          set +e
+          npm view "tasvix-flow@${VERSION}" version >/dev/null 2>&1
+          result=$?
+          set -e
+
+          if [ "$result" -eq 0 ]; then
             echo "exists=true" >> "$GITHUB_OUTPUT"
-            echo "tasvix-flow@${{ steps.pkg.outputs.version }} already published, skipping"
+            echo "tasvix-flow@${VERSION} is already published."
           else
             echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "tasvix-flow@${VERSION} was not found; publishing will be attempted."
           fi
 
-      - name: Publish (OIDC trusted publishing)
-        if: steps.check.outputs.exists == 'false'
-        run: npm publish
+      - name: Build
+        run: npm run build --if-present
 
-      - name: Tag release
+      - name: Publish to npm
         if: steps.check.outputs.exists == 'false'
+        run: npm publish --access public
+
+      - name: Create Git tag
+        if: steps.check.outputs.exists == 'false'
+        env:
+          VERSION: ${{ steps.pkg.outputs.version }}
         run: |
-          git tag "v${{ steps.pkg.outputs.version }}"
-          git push origin "v${{ steps.pkg.outputs.version }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git tag "v${VERSION}"
+          git push origin "v${VERSION}"
